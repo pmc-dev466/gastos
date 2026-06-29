@@ -35,8 +35,8 @@ body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font-b);
 .bal-label{font-size:11px;opacity:.5;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;font-weight:500}
 .bal-amount{font-family:var(--font-d);font-size:52px;letter-spacing:.02em;line-height:1;margin-bottom:6px}
 .bal-amount.pos{color:#5de0a0}.bal-amount.neg{color:#ff7a7a}
-.bal-account{font-size:11px;opacity:.4;margin-bottom:16px}
-.bal-account strong{opacity:1;font-weight:700}
+.bal-account{font-size:12px;opacity:.6;margin-bottom:8px;letter-spacing:.2px}
+.bal-month-ctx{font-size:11px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;opacity:.9}
 .bal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .bal-sub{background:rgba(255,255,255,.07);border-radius:var(--r-sm);padding:10px 12px}
 .bal-sub-label{font-size:10px;opacity:.5;display:flex;align-items:center;gap:5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
@@ -213,7 +213,8 @@ body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font-b);
         <div class="balance-card">
           <div class="bal-label">Balance del mes</div>
           <div class="bal-amount" id="h-balance">+0,00 €</div>
-          <div class="bal-account" id="h-account">Saldo en <strong>Cuenta principal</strong>: 0,00 €</div>
+          <div class="bal-account" id="h-account">Cuenta principal</div>
+          <div class="bal-month-ctx" id="h-month-ctx"></div>
           <div class="bal-row">
             <div class="bal-sub"><div class="bal-sub-label"><span class="dot" style="background:#5de0a0"></span>Ingresos</div><div class="bal-sub-val" id="h-income">0,00 €</div></div>
             <div class="bal-sub"><div class="bal-sub-label"><span class="dot" style="background:#ff7a7a"></span>Gastos</div><div class="bal-sub-val" id="h-expenses">0,00 €</div></div>
@@ -284,7 +285,7 @@ body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font-b);
         <div class="section-title">Apariencia</div>
         <div class="profile-card"><div class="dark-toggle"><span class="dark-toggle-lbl">🌙 Modo oscuro</span><div class="dark-switch" id="dark-switch" onclick="toggleDarkMode()"></div></div></div>
         <div class="section-title">Cuenta de ahorros</div>
-        <div class="profile-card"><div class="field"><label>Nombre de la cuenta</label><input type="text" id="p-name" placeholder="Cuenta principal"></div><div class="field"><label>Saldo actual (€)</label><input type="text" id="p-balance" inputmode="decimal" placeholder="0,00"></div><button class="cta" onclick="saveAccount()">Guardar cuenta</button></div>
+        <div class="profile-card"><div class="field"><label>Nombre de la cuenta</label><input type="text" id="p-name" placeholder="Cuenta principal"></div><div class="field"><label>Saldo inicial (punto de partida, €)</label><input type="text" id="p-balance" inputmode="decimal" placeholder="0,00"></div><button class="cta" onclick="saveAccount()">Guardar cuenta</button></div>
         <div class="section-title">Presupuesto mensual</div>
         <div class="profile-card"><p class="help">Límite de gasto mensual. Verás en el informe cuánto llevas consumido.</p><div class="field"><label>Presupuesto (€)</label><input type="text" id="p-budget" inputmode="decimal" placeholder="0,00"></div><button class="cta" onclick="saveBudget()">Guardar presupuesto</button></div>
         <div class="section-title">Mis etiquetas</div>
@@ -298,7 +299,6 @@ body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font-b);
   <button class="fab" id="fab" onclick="navigate('add')">+</button>
   <nav id="navbar">
     <button class="nav-item active" onclick="navigate('home')" id="nav-home"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>Inicio</button>
-    <button class="nav-item" onclick="navigate('add')" id="nav-add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Añadir</button>
     <button class="nav-item" onclick="navigate('informes')" id="nav-informes"><svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>Informes</button>
     <button class="nav-item" onclick="navigate('metas')" id="nav-metas"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="1"/></svg>Metas</button>
     <button class="nav-item" onclick="navigate('perfil')" id="nav-perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
@@ -341,12 +341,14 @@ function fmtDayMonth(iso){const d=new Date(iso+'T00:00:00');return d.getDate()+'
 function fmtFullDate(iso){const d=new Date(iso+'T00:00:00');const t=todayISO();if(iso===t)return 'Hoy, '+d.getDate()+' '+MESES_C[d.getMonth()];return d.getDate()+' '+MESES_C[d.getMonth()]+' '+d.getFullYear()}
 function weekBounds(){const today=new Date();const dow=today.getDay();const off=dow===0?-6:1-dow;const mon=new Date(today);mon.setDate(today.getDate()+off);const sun=new Date(mon);sun.setDate(mon.getDate()+6);return{start:isoFromParts(mon.getFullYear(),mon.getMonth()+1,mon.getDate()),end:isoFromParts(sun.getFullYear(),sun.getMonth()+1,sun.getDate())};}
 const screenMap={home:'s-home',add:'s-add',informes:'s-reports',metas:'s-goals',perfil:'s-profile'};
-const navMap={home:'nav-home',add:'nav-add',informes:'nav-informes',metas:'nav-metas',perfil:'nav-perfil'};
+const navMap={home:'nav-home',informes:'nav-informes',metas:'nav-metas',perfil:'nav-perfil'};
 let currentScreen='home';
 function navigate(name){
   if(name==='add'&&currentScreen!=='add'&&!editingId)resetForm();
-  document.getElementById(screenMap[currentScreen]).classList.remove('active');document.getElementById(navMap[currentScreen]).classList.remove('active');
-  currentScreen=name;const s=document.getElementById(screenMap[name]);s.classList.add('active');s.scrollTop=0;document.getElementById(navMap[name]).classList.add('active');
+  document.getElementById(screenMap[currentScreen]).classList.remove('active');
+  if(navMap[currentScreen])document.getElementById(navMap[currentScreen]).classList.remove('active');
+  currentScreen=name;const s=document.getElementById(screenMap[name]);s.classList.add('active');s.scrollTop=0;
+  if(navMap[name])document.getElementById(navMap[name]).classList.add('active');
   document.getElementById('fab').style.display=name==='home'?'flex':'none';
   if(name==='home')renderHome();if(name==='informes')renderReports(reportMonth);if(name==='metas')renderGoals();if(name==='perfil')renderProfile();
 }
@@ -390,8 +392,11 @@ function filterTxs(txs){if(activeTypeFilter.length===0)return txs;return txs.fil
 function renderHome(){
   const cur=monthKey(new Date());const allMonthTxs=getMonthTxs(cur);const s=summarize(allMonthTxs);
   document.getElementById('h-month-title').textContent=monthLabel(cur);
-  const balEl=document.getElementById('h-balance');balEl.textContent=fmtSigned(s.balance);balEl.className='bal-amount '+(s.balance>=0?'pos':'neg');
-  document.getElementById('h-account').innerHTML='Saldo en <strong>'+esc(settings.accountName||'Cuenta principal')+'</strong>: '+fmt(settings.accountBalance||0);
+  const totalBalance=(settings.accountBalance||0)+summarize(transactions).income-summarize(transactions).expenses;
+  const balEl=document.getElementById('h-balance');balEl.textContent=fmtSigned(totalBalance);balEl.className='bal-amount '+(totalBalance>=0?'pos':'neg');
+  document.getElementById('h-account').textContent=settings.accountName||'Cuenta principal';
+  const mn=s.income>0||s.expenses>0?'<span style="color:var(--green)">↑ '+fmt(s.income)+'</span><span style="margin:0 6px;opacity:.3">|</span><span style="color:var(--red)">↓ '+fmt(s.expenses)+'</span><span style="margin:0 6px;opacity:.3">|</span><span style="color:'+(s.balance>=0?'var(--green)':'var(--red)')+'">= '+fmtSigned(s.balance)+'</span>':'<span style="opacity:.5">Sin movimientos este mes</span>';
+  document.getElementById('h-month-ctx').innerHTML=mn;
   document.getElementById('h-income').textContent=fmt(s.income);document.getElementById('h-expenses').textContent=fmt(s.expenses);document.getElementById('h-fixed').textContent=fmt(s.fixed);document.getElementById('h-variable').textContent=fmt(s.variable);document.getElementById('h-invest').textContent=fmt(s.investment);
   const baseTxs=viewMode==='week'?getWeekTxs():allMonthTxs;const filtered=filterTxs(baseTxs);
   const ws=viewMode==='week'?weekBounds():null;const wlbl=ws?fmtDayMonth(ws.start)+'\u2013'+fmtDayMonth(ws.end):'';
@@ -407,8 +412,9 @@ function resetForm(){editingId=null;isRecurring=false;setType('variable');docume
 function editTransaction(id){
   const tx=transactions.find(t=>t.id===id);if(!tx)return;
   editingId=id;isRecurring=!!tx.recurring;setType(tx.type);document.getElementById('f-amount').value=String(tx.amount).replace('.',',');document.getElementById('f-desc').value=tx.description;document.getElementById('f-note').value=tx.note||'';currentDate=tx.date;selectedTag=tx.tag||'';showNewTag=false;document.getElementById('new-tag-row').style.display='none';document.getElementById('add-title').textContent='Editar movimiento';document.getElementById('add-cancel').style.display='inline';document.getElementById('save-btn').textContent='Guardar cambios';document.getElementById('delete-btn').style.display='block';updateRecToggle();renderDateVal();renderChips();
-  document.getElementById(screenMap[currentScreen]).classList.remove('active');document.getElementById(navMap[currentScreen]).classList.remove('active');
-  currentScreen='add';document.getElementById('s-add').classList.add('active');document.getElementById('s-add').scrollTop=0;document.getElementById('nav-add').classList.add('active');document.getElementById('fab').style.display='none';
+  document.getElementById(screenMap[currentScreen]).classList.remove('active');
+  if(navMap[currentScreen])document.getElementById(navMap[currentScreen]).classList.remove('active');
+  currentScreen='add';document.getElementById('s-add').classList.add('active');document.getElementById('s-add').scrollTop=0;document.getElementById('fab').style.display='none';
 }
 function cancelEdit(){resetForm();navigate('home')}
 function deleteFromEdit(){const tx=transactions.find(t=>t.id===editingId);if(!tx)return;showAlert('Eliminar movimiento','\xbfBorrar "'+tx.description+'" ('+fmt(tx.amount)+')?',()=>{transactions=transactions.filter(t=>t.id!==editingId);saveTxs();resetForm();navigate('home');toast('Movimiento eliminado');});}
