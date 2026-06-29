@@ -392,10 +392,12 @@ function filterTxs(txs){if(activeTypeFilter.length===0)return txs;return txs.fil
 function renderHome(){
   const cur=monthKey(new Date());const allMonthTxs=getMonthTxs(cur);const s=summarize(allMonthTxs);
   document.getElementById('h-month-title').textContent=monthLabel(cur);
-  const totalBalance=(settings.accountBalance||0)+summarize(transactions).income-summarize(transactions).expenses;
+  const totalBalance=(settings.accountBalance||0)+summarize(transactions).income-summarize(transactions).expenses-summarize(transactions).investment;
   const balEl=document.getElementById('h-balance');balEl.textContent=fmtSigned(totalBalance);balEl.className='bal-amount '+(totalBalance>=0?'pos':'neg');
   document.getElementById('h-account').textContent=settings.accountName||'Cuenta principal';
-  const mn=s.income>0||s.expenses>0?'<span style="color:var(--green)">↑ '+fmt(s.income)+'</span><span style="margin:0 6px;opacity:.3">|</span><span style="color:var(--red)">↓ '+fmt(s.expenses)+'</span><span style="margin:0 6px;opacity:.3">|</span><span style="color:'+(s.balance>=0?'var(--green)':'var(--red)')+'">= '+fmtSigned(s.balance)+'</span>':'<span style="opacity:.5">Sin movimientos este mes</span>';
+  const monthNet=s.balance-s.investment;
+  const invPart=s.investment>0?'<span style="margin:0 6px;opacity:.3">|</span><span style="color:var(--purple)">📈 '+fmt(s.investment)+'</span>':'';
+  const mn=s.income>0||s.expenses>0||s.investment>0?'<span style="color:var(--green)">↑ '+fmt(s.income)+'</span><span style="margin:0 6px;opacity:.3">|</span><span style="color:var(--red)">↓ '+fmt(s.expenses)+'</span>'+invPart+'<span style="margin:0 6px;opacity:.3">|</span><span style="color:'+(monthNet>=0?'var(--green)':'var(--red)')+'">= '+fmtSigned(monthNet)+'</span>':'<span style="opacity:.5">Sin movimientos este mes</span>';
   document.getElementById('h-month-ctx').innerHTML=mn;
   document.getElementById('h-income').textContent=fmt(s.income);document.getElementById('h-expenses').textContent=fmt(s.expenses);document.getElementById('h-fixed').textContent=fmt(s.fixed);document.getElementById('h-variable').textContent=fmt(s.variable);document.getElementById('h-invest').textContent=fmt(s.investment);
   const baseTxs=viewMode==='week'?getWeekTxs():allMonthTxs;const filtered=filterTxs(baseTxs);
